@@ -14,12 +14,18 @@ Set OUTPUT for output file name or silent for no output.
 
 INPUT is the web ptt url.
 
+## Dependency
+
+* [pandas](https://pandas.pydata.org/)
+
+* [beautifulsoup4](https://www.crummy.com/software/BeautifulSoup/bs4/doc/)
+
 # IP2Location
 
 You can place IP2Location database in the project for faster performance.
 
 The database must have latitude and longtitude information.
 
-Please download the CSV one since I don't want to deal with sql.
+Please download the CSV one since I don't know what that bin file is.
 
 This site or product includes IP2Location LITE data available from [http://www.ip2location.com](http://www.ip2location.com).
