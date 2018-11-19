@@ -1,3 +1,10 @@
+# csv file
+*.CSV
+*.csv
+
+# sqlite db
+*.db
+
 # vim swp
 *.swp
 
