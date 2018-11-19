@@ -4,11 +4,12 @@ import os
 import requests
 import sqlite3
 import pandas
-import partial
 from contextlib import closing
 from bs4 import BeautifulSoup
+from types import SimpleNamespace
 
 import getAllPush
+import getLocationFromPush
 
 def main(argv):
     # parse argument
@@ -20,49 +21,54 @@ def main(argv):
     output_subP.add_argument('-silent', action='store_true', help="No any output. Use this option when called by other program and just want to get the return value.")
     arg = argP.parse_args(argv)
 
-    original_stdout = sys.stdout # for restore stdout
+    # config
+    config = SimpleNamespace()
+    config.stdout = sys.stdout
+    config.stderr = sys.stderr
     if arg.output:
-        sys.stdout = open(arg.output, 'w')
+        config.stdout = open(arg.output, 'w')
     elif arg.silent:
-        sys.stdout = open(os.devnull, 'w')
+        config.stdout = open(os.devnull, 'w')
+        config.stderr = open(os.devnull, 'w')
     url = arg.INPUT
 
-    # get the page
-    # bypass ask 18
-    page = requests.get(url, cookies={'over18':'1'})
-    soup = BeautifulSoup(page.text.encode('utf-8'), features = 'html.parser')
 
     ## read IP2Location database if present
-    db_con = None
+    config.db_name = 'ipFindLocation.db'
+    config.db_csv_table_name = ""
+    db_conn = sqlite3.connect(config.db_name)
     if arg.database:
-        db_con = sqlite3.connect(arg.database + '.db')
-        with closing(db_con.cursor()) as cursor:
+        config.db_csv_table_name = arg.database
+        with closing(db_conn.cursor()) as cursor:
             # load CSV if not exist
             try:
-                cursor.execute("SELECT * FROM ip2location_db")
+                cursor.execute("SELECT * FROM `{0}`".format(config.db_csv_table_name))
             except sqlite3.OperationalError: # table not exist, load CSV
-                print("Creating database from CSV file", file = sys.stderr)
-                cursor.execute('''CREATE TABLE `ip2location_db`(
-                        `ip_from` UNSIGNED INT(10),
-                        `ip_to` UNSIGNED INT(10),
-                        `country_code` CHAR(2),
-                        `country_name` VARCHAR(64),
-                        `region_name` VARCHAR(128),
-                        `city_name` VARCHAR(128),
-                        `latitude` DOUBLE,
-                        `longitude` DOUBLE
-                        );''')
-                csv_r = pandas.read_csv(arg.database)
-                csv_r.to_sql('ip2location_db', db_con, if_exists = 'replace')
-                db_con.commit()
+                print("[Log] Creating database from CSV file.", file = config.stderr)
+                header = ['ip_from', 'ip_to', 'country_code', 'country_name', 'region_name', 'city_name', 'latitude', 'longitude']
+                csv_r = pandas.read_csv(arg.database, names = header)
+                csv_r.to_sql(config.db_csv_table_name, db_conn, if_exists = 'replace')
+                db_conn.commit()
+
+    # get the page
+    print("[Log] Getting web page.", file = config.stderr)
+    page = requests.get(url, cookies={'over18':'1'}) # bypass ask 18
+    soup = BeautifulSoup(page.text.encode('utf-8'), features = 'html.parser')
 
     # get all push
+    print("[Log] Parsing web page.", file = config.stderr)
+    poster = getAllPush.get_poster(soup)
     all_push = getAllPush.get_all_push(soup)
 
-    print(all_push)
-    
-    # restore stdout    
-    sys.stdout = original_stdout
+    # transfer to location
+    # set environment
+    config.quried_table_name = "quried_ip"
+    getLocationFromPush.config = config
+    # query
+    result_poster = getLocationFromPush.get_location_from_push([poster])
+    result_push = getLocationFromPush.get_location_from_push(all_push)
+
+    # call map api
 
 if __name__ == '__main__':
     main(sys.argv[1:])

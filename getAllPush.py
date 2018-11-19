@@ -1,3 +1,6 @@
+import re
+import datetime
+
 def get_all_push (soup):
     # get all reply pushes
     all_push = soup.find_all('div', class_ = 'push')
@@ -21,3 +24,28 @@ def get_all_push (soup):
         parsed_data.append(tmp)
     
     return parsed_data
+
+def get_poster (soup):
+    tmp = {'tag' : 'poster'}
+
+    # find poster id
+    ps_s = soup.find_all('span', class_ = 'article-meta-value')[0].text.split(' ')[0]
+    tmp['id'] = ps_s
+
+    # find poster ip
+    ip_s = soup.find('span', text = re.compile('^※ 發信站: 批踢踢實業坊\(ptt\.cc\), 來自: \d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$'))
+    try:
+        ip_f = re.search('^※ 發信站: 批踢踢實業坊\(ptt\.cc\), 來自: (\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})$', ip_s.text).group(1)
+    except AttributeError:
+        print("[Wraning] Cannot find poster's ip.")
+        ip_f = ""
+
+    tmp['ip'] = ip_f
+
+    # find post time
+    ps_s = soup.find_all('span', class_ = 'article-meta-value')[-1]
+    dt = datetime.datetime.strptime(ps_s.text, '%c')
+    tmp['month'] = dt.strftime('%m')
+    tmp['day'] = dt.strftime('%d')
+    tmp['time'] = dt.strftime('%X')
+    return tmp
