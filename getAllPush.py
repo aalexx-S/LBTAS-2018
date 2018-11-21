@@ -13,7 +13,7 @@ def get_all_push (soup):
         tmp['id'] = entry.find('span', class_ = 'push-userid').text
 
         tmp['content'] = entry.find('span', class_ = 'push-content').text.strip()[2:]
-        
+
         ip_date_stuff = entry.find('span', class_ = 'push-ipdatetime').text.strip()
         tokens = ip_date_stuff.split(' ')
         tmp['ip'] = tokens[0]
@@ -22,7 +22,7 @@ def get_all_push (soup):
         tmp['day'] = tt[1]
         tmp['time'] = tokens[2]
         parsed_data.append(tmp)
-    
+
     return parsed_data
 
 def get_poster (soup):
