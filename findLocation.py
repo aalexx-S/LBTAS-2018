@@ -11,14 +11,16 @@ from collections import defaultdict
 
 import getAllPush
 import getLocationFromPush
+import corToCity
 from geolocationAPI import GeolocationAPIHandler
 
 def main(argv):
     # parse argument
     argP = argparse.ArgumentParser(description="Input a web ptt url and the program will mark all the ip of replies on a map, containing in a html file.")
-    argP.add_argument('KEY_FILE', help='The file contains service name and the required informations')
     argP.add_argument('INPUT', help="The target web ptt url.")
+    argP.add_argument('-k', '--keyfile', help='The file contains service name and the required informations')
     argP.add_argument('-db', '--database', help="IP2Location data base name.")
+    argP.add_argument('-shp', '--shapefile', help="Taiwan administation area shapefile.")
     argP.add_argument('-qt', '--querytimes', help="Number of times of queries for each ip addresses. The result will be the average of all queries. Default to 1.")
     output_subP = argP.add_mutually_exclusive_group()
     output_subP.add_argument('-o', '--output', help="The output file name. Otherwise stdout.")
@@ -35,8 +37,18 @@ def main(argv):
         config.stdout = open(os.devnull, 'w')
         config.stderr = open(os.devnull, 'w')
     url = arg.INPUT
-    config.keyfile = arg.KEY_FILE
-    config.threads = 8
+    config.keyfile = 'key.txt'
+    if arg.keyfile:
+        arg.KEY_FILE
+    config.threads = 4
+    # cut .shp off shape file name
+    config.shapefile = './shp/COUNTY_MOI_1070516'
+    if arg.shapefile:
+        config.shapefile = arg.shapefile[:arg.shapefile.rfind('.shp')]
+    # separate filename and path
+    config.shppath, config.shpname = os.path.split(config.shapefile)
+    if config.shppath == '':
+        config.shppath = '.'
     config.qt = 1
     if arg.querytimes:
         if arg.querytimes <= 0:
@@ -71,22 +83,46 @@ def main(argv):
 
     # get all push
     print("[Log] Parsing web page.", file = config.stderr)
+    getAllPush.config = config
     poster = getAllPush.get_poster(soup)
     all_push = getAllPush.get_all_push(soup)
 
-    # transfer to location
+    ## transfer to location
     # set environment
     config.quried_table_name = "quried_ip"
     getLocationFromPush.config = config
     # query
     print("[Log] Query poster.", file = config.stderr)
-    result_poster = getLocationFromPush.get_location_from_push([poster])
+    result_poster = getLocationFromPush.get_location_from_push([poster])[0] # return in list
     print("[Log] Query pushes.", file = config.stderr)
     result_push = getLocationFromPush.get_location_from_push(all_push)
 
-    # call map api
+    # filter ips not in Taiwan
+    foreign_push = []
+    taiwan_push = []
+    for push in result_push:
+        if push['country_name'] != 'Taiwan':
+            foreign_push.append(push)
+        else:
+            taiwan_push.append(push)
+
+    # poster in Taiwan
+    if result_poster['country_name'] == 'Taiwan':
+        taiwan_push.insert(0, result_poster)
+
+    ## map ip to cities
+    corToCity.config = config
+    result_poster, *taiwan_push = corToCity.cor_to_city(taiwan_push) # cor_to_shape keep the order
+
+    # filter out mobile phone user by longitude and latitude and city
+    black_list = []
+
+    ## call map api
+    print(taiwan_push)
+
+    # DEBUG
     q = defaultdict(lambda: 0)
-    for i in result_push:
+    for i in taiwan_push:
         q[ "{0},{1}".format(i['longitude'], i['latitude']) ] += 1
     for a, b in q.items():
         print("{0}: {1}".format(a, b))

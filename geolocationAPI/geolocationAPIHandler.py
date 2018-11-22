@@ -56,7 +56,11 @@ class GeolocationAPIHandler (Service):
             c = bisect(self.p, random.uniform(0, self.acd)) - 1
             b = self.services[c].lock.acquire(timeout = self.acd)
             if b: # lock acquired
-                re.append(self.services[c].request(ip))
+                g = self.services[c].request(ip)
+                if g == None: # something went wrong
+                    print("[Error] Something went wrong when querying ip {0} with {1}. Return: {2}".format(ip, self.services[c], g), file = self.config.stderr)
+                    exit(1)
+                re.append(g)
                 self.services[c].lock.release()
                 i += 1
             else: # failed to acquired lock

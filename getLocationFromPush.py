@@ -54,6 +54,7 @@ def get_location_from_push (all_push):
     db_conn.commit()
     db_conn.close()
     return result
+
 # Thread entry point
 def _get_location(ip):
     # if quried, return
@@ -81,7 +82,7 @@ def _get_location(ip):
 
         # put in db
         if res != None and res['longitude'] != float('inf') and res['latitude'] != float('inf'):
-            cursor.execute("INSERT INTO `{0}` VALUES (?,?,?,?,?)".format(config.quried_table_name), (ip, _ip_to_int10(ip), res['country_name'], res['longitude'], res['latitude']))
+            cursor.execute("INSERT INTO `{0}` VALUES (?,?,?,?,?)".format(config.quried_table_name), (ip, _ip_to_int10(ip), res['country_name'], res['latitude'], res['longitude']))
         else:
             #print("[Warning] Invalide API request return. None or longitude or latitude error.", file = config.stderr)
             pass
