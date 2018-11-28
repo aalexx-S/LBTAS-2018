@@ -1,5 +1,5 @@
-import fiona
 import copy
+import fiona
 from shapely.geometry import shape, Point
 from pyproj import Proj, transform
 
@@ -7,8 +7,8 @@ config = None
 
 def cor_to_city(all_queries):
     # read shapefile
-    print("[Log] Constructing city shape.", file = config.stderr)
-    ad_area_shp = fiona.open(config.shppath + '/' + config.shpname + '.shp', encoding = 'utf-8')
+    print("[Log] Constructing city shape.", file=config.stderr)
+    ad_area_shp = fiona.open(config.shppath + '/' + config.shpname + '.shp', encoding='utf-8')
     shapes = {}
     attr = {}
     for area in ad_area_shp:
@@ -34,4 +34,3 @@ def trans(lon, lat):
     inp = Proj(init='epsg:4326')
     oup = Proj(init='epsg:3826')
     return transform(inp, oup, lon, lat)
-

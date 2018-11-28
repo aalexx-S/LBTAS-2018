@@ -1,13 +1,13 @@
 import argparse
 import sys
 import os
-import requests
 import sqlite3
-import pandas
 from contextlib import closing
-from bs4 import BeautifulSoup
 from types import SimpleNamespace
 from collections import defaultdict
+from bs4 import BeautifulSoup
+import requests
+import pandas
 
 import getAllPush
 import getLocationFromPush
@@ -39,7 +39,7 @@ def main(argv):
     url = arg.INPUT
     config.keyfile = 'key.txt'
     if arg.keyfile:
-        arg.KEY_FILE
+        config.keyfile = arg.KEY_FILE
     config.threads = 4
     # cut .shp off shape file name
     config.shapefile = './shp/COUNTY_MOI_1070516'
@@ -52,7 +52,8 @@ def main(argv):
     config.qt = 1
     if arg.querytimes:
         if arg.querytimes <= 0:
-            print("[Error] Query times <= 0.", file = config.stderr)
+            print('[Error] Query times <= 0.', file=config.stderr)
+            exit(1)
         config.qt = arg.querytimes
 
     ## read IP2Location database if present
@@ -66,10 +67,10 @@ def main(argv):
             try:
                 cursor.execute("SELECT * FROM `{0}`".format(config.db_csv_table_name))
             except sqlite3.OperationalError: # table not exist, load CSV
-                print("[Log] Creating database from CSV file.", file = config.stderr)
+                print("[Log] Creating database from CSV file.", file=config.stderr)
                 header = ['ip_from', 'ip_to', 'country_code', 'country_name', 'region_name', 'city_name', 'latitude', 'longitude']
-                csv_r = pandas.read_csv(arg.database, names = header)
-                csv_r.to_sql(config.db_csv_table_name, db_conn, if_exists = 'replace')
+                csv_r = pandas.read_csv(arg.database, names=header)
+                csv_r.to_sql(config.db_csv_table_name, db_conn, if_exists='replace')
                 db_conn.commit()
 
     # init geolocation handler
@@ -77,12 +78,12 @@ def main(argv):
     config.geoHandler = GeolocationAPIHandler(config.keyfile)
 
     # get the page
-    print("[Log] Getting web page.", file = config.stderr)
+    print("[Log] Getting web page.", file=config.stderr)
     page = requests.get(url, cookies={'over18':'1'}) # bypass ask 18
-    soup = BeautifulSoup(page.text.encode('utf-8'), features = 'html.parser')
+    soup = BeautifulSoup(page.text.encode('utf-8'), features='html.parser')
 
     # get all push
-    print("[Log] Parsing web page.", file = config.stderr)
+    print("[Log] Parsing web page.", file=config.stderr)
     getAllPush.config = config
     poster = getAllPush.get_poster(soup)
     all_push = getAllPush.get_all_push(soup)
@@ -92,9 +93,9 @@ def main(argv):
     config.quried_table_name = "quried_ip"
     getLocationFromPush.config = config
     # query
-    print("[Log] Query poster.", file = config.stderr)
+    print("[Log] Query poster.", file=config.stderr)
     result_poster = getLocationFromPush.get_location_from_push([poster])[0] # return in list
-    print("[Log] Query pushes.", file = config.stderr)
+    print("[Log] Query pushes.", file=config.stderr)
     result_push = getLocationFromPush.get_location_from_push(all_push)
 
     # filter ips not in Taiwan
@@ -114,19 +115,16 @@ def main(argv):
     corToCity.config = config
     result_poster, *taiwan_push = corToCity.cor_to_city(taiwan_push) # cor_to_shape keep the order
 
-    # filter out mobile phone user by longitude and latitude and city
-    black_list = []
+    # filter out mobile phone user by ip range
 
     ## call map api
-    print(taiwan_push)
 
     # DEBUG
     q = defaultdict(lambda: 0)
     for i in taiwan_push:
-        q[ "{0},{1}".format(i['longitude'], i['latitude']) ] += 1
+        q["{0},{1} {2}".format(i['longitude'], i['latitude'], i['city'])] += 1
     for a, b in q.items():
         print("{0}: {1}".format(a, b))
 
 if __name__ == '__main__':
     main(sys.argv[1:])
-

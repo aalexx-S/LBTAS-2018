@@ -1,15 +1,12 @@
 import copy
-import sys
 import sqlite3
 from contextlib import closing
 from collections import defaultdict
 from multiprocessing.dummy import Pool as ThreadPool
 
-from geolocationAPI import GeolocationAPIHandler
-
 config = None
 
-def get_location_from_push (all_push):
+def get_location_from_push(all_push):
     db_conn = sqlite3.connect(config.db_name)
     db_conn.row_factory = sqlite3.Row
     # create quried ip table in db if not exist
@@ -40,7 +37,7 @@ def get_location_from_push (all_push):
         # progress
         nod_p = i / len(query_ip_list)
         nop = int(40 * nod_p)
-        print("[Log] Progress: [" + '-' * nop + ' ' * (40 - nop) + "] {2:.2f}%".format(i, len(query_ip_list), nod_p * 100), end = "\r", file = config.stderr)
+        print("[Log] Progress: [" + '-' * nop + ' ' * (40 - nop) + "] {0}/{1}".format(i, len(query_ip_list)), end="\r", file=config.stderr)
         i += 1
         # process return
         ip = r['ip']
@@ -50,7 +47,7 @@ def get_location_from_push (all_push):
             tmp['longitude'] = r['longitude']
             tmp['latitude'] = r['latitude']
             result.append(tmp)
-    print('', file = config.stderr) # to keep progress bar after finish
+    print('', file=config.stderr) # to keep progress bar after finish
     db_conn.commit()
     db_conn.close()
     return result
@@ -65,23 +62,23 @@ def _get_location(ip):
         cursor.execute("SELECT * FROM `{0}` WHERE `ip_int` = {1}".format(config.quried_table_name, _ip_to_int10(ip)))
         res = cursor.fetchall()
         if len(res) > 1: # this really shouldn't happen
-            print("[Warning] Multiple result with same ip in database for ip {0} ({1}). Use the first one".format(ip, _ip_to_int10(ip)), file = config.stderr)
+            print("[Warning] Multiple result with same ip in database for ip {0} ({1}). Use the first one".format(ip, _ip_to_int10(ip)), file=config.stderr)
         if len(res) >= 1: # already quried
             return res[0]
 
         # not quried, call API
         # if ip2location db present, query that first
         res = _ip2location_db_check(db_conn, ip)
-        if res == None or res['country_code'] == 'TW': # not present, or need accurate result, call API
+        if res is None or res['country_code'] == 'TW': # not present, or need accurate result, call API
             res = config.geoHandler.request(ip)
 
         # Taiwan is Taiwan !!
         # IP2Location
-        if res != None and res['country_name'] == 'Taiwan, Province of China':
+        if res is not None and res['country_name'] == 'Taiwan, Province of China':
             res['country_name'] = 'Taiwan'
 
         # put in db
-        if res != None and res['longitude'] != float('inf') and res['latitude'] != float('inf'):
+        if res is not None and res['longitude'] != float('inf') and res['latitude'] != float('inf'):
             cursor.execute("INSERT INTO `{0}` VALUES (?,?,?,?,?)".format(config.quried_table_name), (ip, _ip_to_int10(ip), res['country_name'], res['latitude'], res['longitude']))
         else:
             #print("[Warning] Invalide API request return. None or longitude or latitude error.", file = config.stderr)
@@ -89,16 +86,16 @@ def _get_location(ip):
     db_conn.commit()
     return res
 
-def _ip2location_db_check (db_conn, ip):
+def _ip2location_db_check(db_conn, ip):
     if config.db_csv_table_name == "": # ip2location csv database isn't available
         return None
     # query ip
     ip_int10 = _ip_to_int10(ip)
     with closing(db_conn.cursor()) as cursor:
-        cursor.execute("SELECT * FROM `{0}` WHERE ip_from <= {1} AND ip_to >= {2};".format(config.db_csv_table_name, ip_int10, ip_int10))
+        cursor.execute("SELECT * FROM `{0}` WHERE ip_from <= {int10} AND ip_to >= {int10};".format(config.db_csv_table_name, int10=ip_int10))
         res = cursor.fetchall()
         if len(res) > 1: # this really shouldn't happen
-            print("[Warning] Multiple result with same ip segment in ip2location CSV database for ip {0} ({1}).".format(ip, _ip_to_int10(ip)), file = config.stderr)
+            print("[Warning] Multiple result with same ip segment in ip2location CSV database for ip {0} ({1}).".format(ip, _ip_to_int10(ip)), file=config.stderr)
         if len(res) >= 1:
             re = {}
             for i in res[0].keys():
