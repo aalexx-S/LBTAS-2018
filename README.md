@@ -1,6 +1,6 @@
 # PTT Reply Location Marker
 
-This program use some geolocation magic to find the replyers' location and mark it on a map using [api](https://segis.moi.gov.tw/STAT/Web/Portal/STAT_PortalHome.aspx#) provided by Ministry of the Interior, Taiwan.
+This program use some geolocation tech to find PTT replyers' location.
 
 ## Usage
 

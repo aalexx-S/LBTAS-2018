@@ -37,7 +37,7 @@ def get_location_from_push(all_push):
         # progress
         nod_p = i / len(query_ip_list)
         nop = int(40 * nod_p)
-        print("[Log] Progress: [" + '-' * nop + ' ' * (40 - nop) + "] {0}/{1}".format(i, len(query_ip_list)), end="\r", file=config.stderr)
+        print("[Log] Progress: [" + '-' * nop + ' ' * (40 - nop) + "] {0} out of {1} ip queried.".format(i, len(query_ip_list)), end="\r", file=config.stderr)
         i += 1
         # process return
         ip = r['ip']

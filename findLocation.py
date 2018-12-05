@@ -86,7 +86,8 @@ def main(argv):
     print("[Log] Parsing web page.", file=config.stderr)
     getAllPush.config = config
     poster = getAllPush.get_poster(soup)
-    all_push = getAllPush.get_all_push(soup)
+    all_push, no_ip_counter = getAllPush.get_all_push(soup)
+    print("[Log] {0} out of {1} pushes don't have ip information".format(no_ip_counter, no_ip_counter + len(all_push)), file=config.stderr)
 
     ## transfer to location
     # set environment
@@ -107,24 +108,32 @@ def main(argv):
         else:
             taiwan_push.append(push)
 
-    # poster in Taiwan
-    if result_poster['country_name'] == 'Taiwan':
-        taiwan_push.insert(0, result_poster)
 
     ## map ip to cities
+    print("[Log] Reading city shape from shapefile.", file=config.stderr)
     corToCity.config = config
-    result_poster, *taiwan_push = corToCity.cor_to_city(taiwan_push) # cor_to_shape keep the order
+    if result_poster['country_name'] == 'Taiwan': # if poster in Taiwan, find the city name
+        taiwan_push.insert(0, result_poster)
+    result_poster, *taiwan_push = corToCity.cor_to_city(taiwan_push) # cor_to_shape keeps input order
 
-    # filter out mobile phone user by ip range
+    # output data
+    if result_poster['country_name'] != 'Taiwan':
+        print("poster: {0}".format(result_poster['country_name']))
+    else:
+        print("poster: {0}".format(result_poster['city']))
 
-    ## call map api
-
-    # DEBUG
     q = defaultdict(lambda: 0)
     for i in taiwan_push:
-        q["{0},{1} {2}".format(i['longitude'], i['latitude'], i['city'])] += 1
+        q["{0}".format(i['city'])] += 1
     for a, b in q.items():
         print("{0}: {1}".format(a, b))
+
+    q = defaultdict(lambda: [0, set()])
+    for i in foreign_push:
+        q["{0}".format(i['country_name'])][0] += 1
+        q["{0}".format(i['country_name'])][1].add(i['id'])
+    for a, b in q.items():
+        print("{0}: {1} {2}".format(a, b[0], b[1]))
 
 if __name__ == '__main__':
     main(sys.argv[1:])

@@ -7,7 +7,6 @@ config = None
 
 def cor_to_city(all_queries):
     # read shapefile
-    print("[Log] Constructing city shape.", file=config.stderr)
     ad_area_shp = fiona.open(config.shppath + '/' + config.shpname + '.shp', encoding='utf-8')
     shapes = {}
     attr = {}

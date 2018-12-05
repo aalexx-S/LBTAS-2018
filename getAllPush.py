@@ -7,6 +7,7 @@ def get_all_push(soup):
     # get all reply pushes
     all_push = soup.find_all('div', class_='push')
     parsed_data = []
+    no_ip_counter = 0
     for entry in all_push:
         try:
             tmp = {}
@@ -28,7 +29,11 @@ def get_all_push(soup):
             if not 'warning-box' in entry.get('class'): # the page may be too big, PTT webpage won't show all the pushes
                 print("[Error] Parsing push error: {0}".format(entry), file=config.stderr)
                 exit(1)
-    return parsed_data
+        except IndexError:
+            if not len(tokens) != 3: # ip not recorded
+                print("[Error] ip-data stuff parsing error: {0}".format(entry), file=config.stderr)
+            no_ip_counter += 1
+    return parsed_data, no_ip_counter
 
 def get_poster(soup):
     tmp = {'tag' : 'poster'}
