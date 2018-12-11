@@ -1,3 +1,6 @@
+# font
+*.otf
+
 # generated png
 gen/*.png
 
