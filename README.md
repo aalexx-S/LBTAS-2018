@@ -4,6 +4,26 @@ This program use some geolocation tech to find PTT replyers' location.
 
 ## Usage
 
+Get the ptt post, and draw the statistic to a pie chart.
+```
+python3 genPushPieChart.py INPUT
+```
+Note that this method does not provide any way to change any config because I am lazy and sick. Maybe I will add the options later when I feel better. I don't think its needed though.
+You can make your own drawing/plotting functions easily from findLocation.py. You can call findLocation.main([...parameters...]) to get the result dictioary.
+
+When you call findLocation.main, the return value is a dictionary with the following keys:
+* 'ip\_record\_ratio': a floating point number of the ratio of record ip.
+* 'poster': the poster dictionary. It has keys like 'title', 'city', etc.
+* 'foreign\_push': all the foreign pushes
+* 'taiwan\_push': all the taiwan pushes 
+* 'taiwan\_push\_acc' and 'foreign\_push\_acc': the number of pushes for each country/city.
+* 'foreign\_push\_id': all the foreigh push id.
+
+It is important to include a chinese font since bydefault pyplot does not support chinese. '思源宋體' is by defualt used by the program, so please download it from [思源宋體](https://www.google.com/get/noto/#serif-hant) and place the 'regular' one in the root directory. It is hard coded in genPushPieChart.
+
+The output plot will be stored in 'gen'.
+
+Or just print the statistic to stdout or whatever place you like.
 ```
 python3 findLocation.py [-h] [-k KEYFILE] [-db DATABASE] [-shp SHAPEFILE] [-qt QUERYTIMES] [-o OUTPUT | -silent] INPUT
 ```
