@@ -1,3 +1,6 @@
+# generated png
+gen/*.png
+
 # virtualenv
 LBTAS-2018-env/
 
