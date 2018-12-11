@@ -49,8 +49,11 @@ def get_poster(soup):
     except AttributeError:
         print("[Wraning] Cannot find poster's ip.", file=config.stderr)
         ip_f = ""
-
     tmp['ip'] = ip_f
+
+    # get page title
+    t_s = soup.find('meta', property='og:title')
+    tmp['title'] = t_s['content']
 
     # find post time
     ps_s = soup.find_all('span', class_='article-meta-value')[-1]

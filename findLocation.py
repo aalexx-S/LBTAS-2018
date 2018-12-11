@@ -117,6 +117,7 @@ def main(argv):
     result_poster, *taiwan_push = corToCity.cor_to_city(taiwan_push) # cor_to_shape keeps input order
 
     # output data
+    print("title = {0}".format(result_poster['title']))
     if result_poster['country_name'] != 'Taiwan':
         print("poster: {0}".format(result_poster['country_name']))
     else:
@@ -128,12 +129,20 @@ def main(argv):
     for a, b in q.items():
         print("{0}: {1}".format(a, b))
 
-    q = defaultdict(lambda: [0, set()])
+    w = defaultdict(lambda: [0, set()])
+    w1 = {}
+    w2 = []
     for i in foreign_push:
-        q["{0}".format(i['country_name'])][0] += 1
-        q["{0}".format(i['country_name'])][1].add(i['id'])
-    for a, b in q.items():
+        w["{0}".format(i['country_name'])][0] += 1
+        w["{0}".format(i['country_name'])][1].add(i['id'])
+    for a, b in w.items():
         print("{0}: {1} {2}".format(a, b[0], b[1]))
+        w1[a] = b[0]
+        w2[a] = b[1]
+
+    # return data
+    re = {'poster': result_poster, 'foreign_push': foreign_push, 'taiwan_push': taiwan_push, 'taiwan_push_acc': q, 'foreign_push_acc': w1, 'foreign_push_id': w2}
+    return re
 
 if __name__ == '__main__':
     main(sys.argv[1:])
