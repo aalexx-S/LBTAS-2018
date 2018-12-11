@@ -11,7 +11,7 @@ def get_all_push(soup):
     for entry in all_push:
         try:
             tmp = {}
-            tmp['tag'] = entry.find('span', class_='push-tag').text
+            tmp['tag'] = entry.find('span', class_='push-tag').text.strip()
 
             tmp['id'] = entry.find('span', class_='push-userid').text
 
