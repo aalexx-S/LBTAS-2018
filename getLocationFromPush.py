@@ -83,7 +83,6 @@ def _get_location(ip):
         else:
             #print("[Warning] Invalide API request return. None or longitude or latitude error.", file = config.stderr)
             pass
-    db_conn.commit()
     return res
 
 def _ip2location_db_check(db_conn, ip):
