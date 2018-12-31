@@ -8,10 +8,9 @@ Get the ptt post, and draw the statistic to a pie chart.
 ```
 python3 genReplyPieChart.py INPUT
 ```
-Note that this method does not provide any way to change any config because I am lazy and sick. Maybe I will add the options later when I feel better. I don't think its needed though.
-You can make your own drawing/plotting functions easily from findLocation.py. You can call findLocation.main([...parameters...]) to get the result dictioary.
+Note that this method does not provide any way to change any config. It should be easy enough to get the resultss from findLocation.main([...parameters...]) and call pyplot.
 
-When you call findLocation.main, the return value is a dictionary with the following keys:
+When calling findLocation.main, the return value is a dictionary with the following keys:
 * 'ip\_record\_ratio': a floating point number of the ratio of record ip.
 * 'poster': the poster dictionary. It has keys like 'title', 'city', etc.
 * 'foreign\_push': all the foreign pushes
@@ -82,7 +81,7 @@ If -shp option is used, the program will automatically handle the path to all th
 
 ### IP2Location Database
 
-User should place [IP2Location database](https://lite.ip2location.com/) in the project for faster performance.
+User should place [IP2Location database](https://lite.ip2location.com/) in the project.
 
 All it does is filter the ip that is not in Taiwan.
 
